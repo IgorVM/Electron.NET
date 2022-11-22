@@ -25,6 +25,17 @@ export = (socket: Socket) => {
         });
     });
 
+    socket.on('register-webContents-willNavigate', (id) => {
+        const browserWindow = getWindowById(id);
+        browserWindow.webContents.removeAllListeners('will-navigate');
+        browserWindow.webContents.on('will-navigate', (event, url) => {
+            if (!url.startsWith('http')) {
+                event.preventDefault();
+            }
+            electronSocket.emit('webContents-willNavigate' + id, url);
+        });
+    });
+
     socket.on('webContentsOpenDevTools', (id, options) => {
         if (options) {
             getWindowById(id).webContents.openDevTools(options);

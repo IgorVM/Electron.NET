@@ -83,6 +83,38 @@ namespace ElectronNET.API
         }
 
         private event Action _didFinishLoad;
+        
+        /// <summary>
+        /// Emitted when a user or the page wants to start navigation. It can happen when the window.location object is changed or a user clicks a link in the page.
+        /// This event will not emit when the navigation is started programmatically with APIs like webContents.loadURL and webContents.back.
+        /// It is also not emitted for in-page navigations, such as clicking anchor links or updating the window.location.hash. Use did-navigate-in-page event for this purpose.
+        /// </summary>
+        public event Action<string> OnWillNavigate
+        {
+            add
+            {
+                if (_willNavigate == null)
+                {
+                    BridgeConnector.On<string>("webContents-willNavigate" + Id, (url) =>
+                    {
+                        Console.WriteLine(url);
+                        _willNavigate(url);
+                    });
+
+                    BridgeConnector.Emit("register-webContents-willNavigate", Id);
+                }
+                _willNavigate += value;
+            }
+            remove
+            {
+                _willNavigate -= value;
+
+                if (_willNavigate == null)
+                    BridgeConnector.Off("webContents-willNavigate" + Id);
+            }
+        }
+
+        private event Action<string> _willNavigate;
 
         internal WebContents(int id)
         {
